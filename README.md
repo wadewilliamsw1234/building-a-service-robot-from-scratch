@@ -48,5 +48,30 @@ The robot that we are going to build is used as a service robot in hotels and re
 
 ## Creating a 2D Drawing of the Robot
 
+## Creating a 3D Model of the Robot
+
+# Robot Simulation with ROS and Gazebo
+
+# Selecting Hardware Components
+
+## Hardware Specifications
+
+## Selecting Motors, Encoders, and Wheels
+
+## Selecting a Motor Driver / Controller
+
+## Selecting the Ultrasonic Sensor
+
+## Inertial Measurement Unit (IMU)
+
+## Kinect
+
+## CPU
+
+## Speakers / Mic
+
+## Power Supply / Battery
+
+## Hardware Summary & Integration
 
 

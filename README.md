@@ -1,77 +1,142 @@
 # Building a Service Robot from Scratch
 **Design, simulate, program, and prototype an autonomous mobile robot using ROS, OpenCV, PCL, and Python.**
 
-This code repository follows the project detailed in [Learning Robotics Using Python](https://www.packtpub.com/en-ic/product/learning-robotics-using-python-9781788623315), published by Packt. For further details and instructions on the book, see the [Learning Robotics using Python - Second Edition](https://github.com/PacktPublishing/Learning-Robotics-using-Python-Second-Edition?tab=readme-ov-file) repository.
+This repository documents the development of an autonomous mobile robot, building on the project outlined in [Learning Robotics Using Python](https://www.packtpub.com/en-ic/product/learning-robotics-using-python-9781788623315), published by Packt. For more details on the original project, see the [Learning Robotics using Python - Second Edition](https://github.com/PacktPublishing/Learning-Robotics-using-Python-Second-Edition?tab=readme-ov-file) repository.
 
-This repository follows the project detailed in the book, except where mentioned. Since the book is from 2018, I have updated some of the parts and made minorly different design decisions based on new parts and my own requirements for the robot. The purpose of this project for me was to build a low-cost robot from scratch that would allow me to learn and apply mechanical design in CAD software, robot simulation with ROS and Gazebo, programming electronics and sensors, and algorithms for speech recognition and synthesis, object detection, SLAM, etc.
+While this project follows the book’s framework, it includes updates to components and design choices to reflect newer hardware availability (post-2018) and my specific requirements. The aim is to create a low-cost service robot from scratch, providing practical experience in:
+- Mechanical design with CAD software
+- Robot simulation using ROS and Gazebo
+- Electronics and sensor programming
+- Algorithms for speech recognition, object detection, SLAM, etc.
 
-# Mechanical Design of the Service Robot
-The robot that we are going to build is used as a service robot in hotels and restaurants to serve food and drinks. The actual robot deployed in hotels may be big, but here we are intending to build a miniature version of it only for testing our technology.
+## Mechanical Design of the Service Robot
+This project focuses on building a miniature service robot for hotels and restaurants, designed to carry food and drinks. While real-world deployments might require a larger robot, this prototype is intended for technology testing and development.
 
-## The Requirements for the Service Robot
-- The robot should have a provision to carry food
-- The robot should be able to carry a maximum payload of 5 kg
-- The robot should travel at a speed between 0.25 m/s and 1 m/s
-- The ground clearance of the robot should be greater than 3 cm
-- The robot must be able to work for 2 hours continuously
-- The robot should be able to move and supply food to any table avoiding obstacles
-- The robot height should be between 40 cm and 1 meter
-- The robot should be of low cost
+### Requirements for the Service Robot
+- **Payload Capacity:** Up to 5 kg
+- **Speed:** 0.25 m/s to 1 m/s
+- **Ground Clearance:** >3 cm
+- **Battery Life:** 2 hours of continuous operation
+- **Navigation:** Autonomous obstacle avoidance
+- **Height:** 40 cm to 1 m
+- **Cost:** Low-cost design
 
 ## Robot Drive Mechanism
-- One of the cost effective solution for mobile robot navigation is differential drive systems. It's one of the simplest drive mechanisms for a mobile robot that is mainly indented for indoor navigation. The differential drive robot consists of two wheels mounted on a common axis controlled by two separate motors. There are two supporting wheels called caster wheels. It ensures stability and weight distribution of the robot. The following diagram shows a typical differential drive system:
-    ![image](https://github.com/user-attachments/assets/84a7c129-b94c-487b-a105-bb5241a37050)
+The robot uses a **differential drive system** due it being cost-effective. It features two wheels on a common axis, each powered by an independent motor, and two caster wheels for stability and weight distribution.
 
+![Differential Drive System](https://github.com/user-attachments/assets/84a7c129-b94c-487b-a105-bb5241a37050)
+
+---
 ### Selection of Motors and Wheels
-- Motors are selected after looking at their specifications. Some of the important parameters for motor selection are torque and RPM.
-    RPM = ((60 * Speed /(3.14 * Diameter of Wheel)
-    RPM = (60 * 0.35 )/(3.14 * 0.09) = 21 / 0.2826 = 74 RPM
-- We can write the frictional force as robot torque = 0 until the robot moves. If we get the robot torque in this condition, we get the maximum torque as follows:
-    µ * N * r - T = 0, where µ is the coefficient of friction, N is the average weight acting on each wheel, r is the radius of wheels, and T is the torque.
-    N = W/4 ( assuming that the weight of the robot is equally distributed on all the four wheels)
-- Therefore, we get:
-    0.6 * (150/4) * 0.045 - T = 0
-- Hence, T = 1.0125 N-m or 10.32 Kg-cm
+Motor and wheel choices are based on calculated speed and torque requirements:
+
+- **RPM Calculation:**
+  \[
+  \text{RPM} = \frac{60 \times \text{Speed}}{\pi \times \text{Wheel Diameter}} = \frac{60 \times 0.35}{3.14 \times 0.09} \approx 74 \text{ RPM}
+  \]
+  *Note: Speed is taken as 0.35 m/s, the midpoint of the required speed range.*
+
+- **Torque Calculation:**
+  Assuming a total robot weight (including payload) of 15 kg, the torque per motor is calculated as:
+  \[
+  T = \frac{\mu \times W \times r}{2} = \frac{0.6 \times 15 \times 9.8 \times 0.045}{2} \approx 1.8 \text{ N-m} \text{ or } 18.35 \text{ kg-cm}
+  \]
+  where:
+  - \(\mu\) = coefficient of friction (0.6)
+  - \(W\) = total weight (15 kg)
+  - \(r\) = wheel radius (0.045 m)
+  - The factor of 2 accounts for the two driven wheels.
 
 ### Design Summary
-- Motor RPM = 80
-- Motor Torque = 10.32 kg-cm
-- Wheel diameter = 9 cm
+- **Motor RPM:** 80 (selected to exceed the calculated 74 RPM)
+- **Motor Torque:** 18.35 kg-cm (selected to meet the calculated requirement)
+- **Wheel Diameter:** 9 cm
 
 ### Robot Chassis Design
-- After computing the robot's motor and wheel parameters, we can design the robot chassis or robot body. As required, the robot chassis should have a provision to hold food, it should be able to withstand up to 5 kg payload, the ground clearance of the robot should be greater than 3 cm and it should be low in cost. Apart from this, the robot should have a provision to place electronics components such as Personal Computer (PC), sensors, and battery.
-- One of the easiest designs to satisfy these requirements is a table-like design. The TurtleBot (http://www.turtlebot.com/) design is a kind of table-like design. It has three layers in the chassis. A robot platform called Roomba is the drive mechanism of this platform. The Roomba platform has motors and sensors inbuilt, so no need to worry about the designing of robot hardware. The following figure shows the TurtleBot robot chassis design:
-![image](https://github.com/user-attachments/assets/c9f2bb69-59a0-4150-8931-54ddbe2ce1c0)
-- In order to keep costs low and because I want to practice using CAD software, I'm going to design a TurtleBot-like chassis from scratch.
-- Following the book, I use a 2D model in LibreCAD and a 3D model in Blender, since they're free and OS agnostic.
-- We also use a 3D mesh viewing tool called MeshLab to view and check the 3D model design and use Ubuntu as the main OS.
+After computing the robot's motor and wheel parameters, we can design the robot chassis or robot body. As required, the robot chassis should have a provision to hold food, it should be able to withstand up to 5 kg payload, the ground clearance of the robot should be greater than 3 cm and it should be low in cost. Apart from this, the robot should have a provision to place electronics components such as Personal Computer (PC), sensors, and battery.
+
+One of the easiest designs to satisfy these requirements is a table-like design. The TurtleBot (http://www.turtlebot.com/) design is a kind of table-like design. It has three layers in the chassis. A robot platform called Roomba is the drive mechanism of this platform. The Roomba platform has motors and sensors inbuilt, so no need to worry about the designing of robot hardware.
+
+![TurtleBot Chassis](https://github.com/user-attachments/assets/c9f2bb69-59a0-4150-8931-54ddbe2ce1c0)
+
+To minimize costs and gain CAD experience, I’m designing the chassis from scratch using:
+
+- **2D Modeling:** LibreCAD (free, open-source)
+- **3D Modeling:** Blender (free, open-source)
+- **3D Mesh Viewing:** MeshLab
+- **Operating System:** Ubuntu (for ROS compatibility)
 
 ## Creating a 2D Drawing of the Robot
 
+*[Placeholder: Add a description or image of the 2D design once completed.]*
+
 ## Creating a 3D Model of the Robot
 
-# Robot Simulation with ROS and Gazebo
+## Robot Simulation with ROS and Gazebo
 
-# Selecting Hardware Components
+*[Placeholder: This section will detail the use of ROS and Gazebo to simulate the robot’s movement, sensor interactions, and environment. Include specific models or configurations once implemented.]*
 
-## Hardware Specifications
+---
 
-## Selecting Motors, Encoders, and Wheels
+## Selecting Hardware Components
 
-## Selecting a Motor Driver / Controller
+This section outlines the hardware components chosen for the robot, balancing performance, cost, and compatibility.
 
-## Selecting the Ultrasonic Sensor
+### Hardware Specifications
 
-## Inertial Measurement Unit (IMU)
+*[Placeholder: Add detailed specs for each component once finalized.]*
 
-## Kinect
+---
 
-## CPU
+#### Selecting Motors, Encoders, and Wheels
 
-## Speakers / Mic
+Motors are selected based on the calculated 80 RPM and 18.35 kg-cm torque requirements. Encoders will provide feedback for precise control, and wheels are sized at 9 cm in diameter.
 
-## Power Supply / Battery
+---
 
-## Hardware Summary & Integration
+#### Selecting a Motor Driver / Controller
 
+*[Placeholder: Describe the motor driver selection, ensuring it supports the motors and integrates with the CPU.]*
+
+---
+
+#### Selecting the Ultrasonic Sensor
+
+*[Placeholder: Explain the choice of ultrasonic sensor for obstacle detection.]*
+
+---
+
+#### Inertial Measurement Unit (IMU)
+
+*[Placeholder: Detail the IMU selection for orientation and stability data.]*
+
+---
+
+#### Kinect
+
+*[Placeholder: Describe the use of a Kinect sensor for depth perception and navigation.]*
+
+---
+
+#### CPU
+
+*[Placeholder: Specify the CPU requirements for running ROS and processing sensor data.]*
+
+---
+
+#### Speakers / Mic
+
+*[Placeholder: Outline the selection of speakers and a microphone for speech interaction.]*
+
+---
+
+#### Power Supply / Battery
+
+*[Placeholder: Detail the battery choice to support 2 hours of operation under load.]*
+
+---
+
+### Hardware Summary & Integration
+
+*[Placeholder: Provide an overview of how all components are integrated, including diagrams or schematics once available.]*
 
